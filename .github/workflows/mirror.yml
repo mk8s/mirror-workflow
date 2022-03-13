@@ -20,7 +20,6 @@ jobs:
       id: checkIssue
       uses: actions/github-script@v6.0.0
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const fs = require('fs')
           const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"))
@@ -62,21 +61,21 @@ jobs:
           }
 
     - name: Log in to quay.io
-      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
+      if: steps.checkIssue.outputs.CHECKED
       uses: docker/login-action@v1
       with:
         registry: quay.io
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_PASSWORD }}
     - name: Log in to Docker Hub
-      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
+      if: steps.checkIssue.outputs.CHECKED
       uses: docker/login-action@v1
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
     - name: pull and push
-      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
+      if: steps.checkIssue.outputs.CHECKED
       shell: bash
       run: |
         docker pull ${{ steps.checkIssue.outputs.MIRROR_SRC }}
@@ -86,10 +85,9 @@ jobs:
         docker push hyperk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}
 
     - name: close issue
-      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
+      if: steps.checkIssue.outputs.CHECKED
       uses: actions/github-script@v6.0.0
       with:
-        repo-token: github-token
         script: |
           const fs = require('fs')
           const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"))
