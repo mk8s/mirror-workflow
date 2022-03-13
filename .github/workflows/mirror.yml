@@ -44,6 +44,13 @@ jobs:
               let num = event.issue.number
 
               if (labels.indexOf("work-in-progress") == -1) {
+                  await github.rest.issues.createComment({
+                      owner: process.env.REPO_OWNER,
+                      repo: process.env.REPO_NAME,
+                      issue_number: num,
+                      body: 'Handled by [Action #${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})',
+                  })
+
                   let src = event.issue.title
 
                   let bodyMatch = (event.issue.body || '').match(/^Image-Name: (\S+)$/m)
@@ -99,6 +106,12 @@ jobs:
               repo: process.env.REPO_NAME,
               issue_number: num,
               name: "work-in-progress",
+          })
+          await github.rest.issues.createComment({
+              owner: process.env.REPO_OWNER,
+              repo: process.env.REPO_NAME,
+              issue_number: num,
+              body: 'Finished',
           })
           await github.rest.issues.update({
               owner: process.env.REPO_OWNER,
