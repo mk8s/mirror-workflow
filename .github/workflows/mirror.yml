@@ -24,13 +24,18 @@ jobs:
         script: |
           const fs = require('fs')
           const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"))
-          console.log("event: " + event) // DEBUG
 
           if (event.issue && event.action === "labeled") {
+              if (event.issue.state != "open") {
+                  console.log("not open") // DEBUG
+                  exit(0);
+              }
+
               if (event.issue.user.login != "paxnil") {
                   console.log("not by owner") // DEBUG
                   exit(0);
               }
+
               let labels = event.issue.labels.map(l => l.name)
               if (labels.indexOf("mirror-request") == -1) {
                   console.log("not a mirror-request issue") // DEBUG
@@ -50,22 +55,26 @@ jobs:
                   })
                   core.setOutput('MIRROR_SRC', src)
                   core.setOutput('MIRROR_DST', dst)
+                  core.setOutput('CHECKED', true)
               }
           }
 
     - name: Log in to quay.io
+      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
       uses: docker/login-action@v1
       with:
         registry: quay.io
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_PASSWORD }}
     - name: Log in to Docker Hub
+      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
       uses: docker/login-action@v1
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
     - name: pull and push
+      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
       shell: bash
       run: |
         docker pull ${{ steps.checkIssue.outputs.MIRROR_SRC }}
@@ -75,6 +84,7 @@ jobs:
         docker push hyperk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}
 
     - name: close issue
+      if: ${{ steps.checkIssue.outputs.CHECKED == true }}
       uses: actions/github-script@v6.0.0
       with:
         repo-token: github-token
