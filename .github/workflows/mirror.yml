@@ -1,0 +1,99 @@
+name: 'Mirror image'
+on:
+  issues:
+    types:
+    - labeled
+
+env:
+  REPO_OWNER: mk8s
+  REPO_NAME: mirror-workflow
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+
+    steps:
+    - name: check issue
+      id: checkIssue
+      uses: actions/github-script@v6.0.0
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs')
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
+          console.log("event: " + event) // DEBUG
+
+          if (event.issue && event.action === "labeled") {
+              if (event.issue.user.login != "paxnil") {
+                  console.log("not by owner") // DEBUG
+                  exit(0);
+              }
+              let labels = event.issue.labels.map(l => l.name)
+              if (labels.indexOf("mirror-request") == -1) {
+                  console.log("not a mirror-request issue") // DEBUG
+                  exit(0);
+              }
+
+              let num = event.issue.number
+
+              if (labels.indexOf("work-in-progress") == -1)) {
+                  let src = event.issue.title
+                  let dst = src.match('[^/]+:.+$')[0]
+                  await github.rest.issues.addLabels({
+                      owner: process.env.REPO_OWNER,
+                      repo: process.env.REPO_NAME,
+                      issue_number: num,
+                      "labels[].name": [ "work-in-progress" ],
+                  })
+                  core.setOutput('MIRROR_SRC', src)
+                  core.setOutput('MIRROR_DST', dst)
+              }
+          }
+
+    - name: Log in to quay.io
+      uses: docker/login-action@v1
+      with:
+        registry: quay.io
+        username: ${{ secrets.QUAY_USERNAME }}
+        password: ${{ secrets.QUAY_PASSWORD }}
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+    - name: pull and push
+      shell: bash
+      run: |
+        docker pull ${{ steps.checkIssue.outputs.MIRROR_SRC }}
+        docker tag ${{ steps.checkIssue.outputs.MIRROR_SRC }} quay.io/mk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}
+        docker push quay.io/mk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}
+        docker tag ${{ steps.checkIssue.outputs.MIRROR_SRC }} hyperk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}
+        docker push hyperk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}
+
+    - name: close issue
+      uses: actions/github-script@v6.0.0
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs')
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
+
+          let num = event.issue.number
+
+          await github.rest.issues.addLabels({
+              owner: process.env.REPO_OWNER,
+              repo: process.env.REPO_NAME,
+              issue_number: num,
+              name: "work-in-progress",
+          })
+          await github.rest.issues.close({
+              owner: process.env.REPO_OWNER,
+              repo: process.env.REPO_NAME,
+              issue_number: num,
+              state: 'closed',
+          })
+
