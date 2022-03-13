@@ -46,7 +46,9 @@ jobs:
 
               if (labels.indexOf("work-in-progress") == -1) {
                   let src = event.issue.title
-                  let dst = src.match('[^/]+:.+$')[0]
+
+                  let bodyMatch = (event.issue.body || '').match(/^Image-Name: (\S+)$/m)
+                  let dst = bodyMatch ? (bodyMatch[1] + ':' + src.match(/[^:]+$/)[0]) : src.match(/[^/]+:.+$/)[0]
                   await github.rest.issues.addLabels({
                       owner: process.env.REPO_OWNER,
                       repo: process.env.REPO_NAME,
