@@ -105,7 +105,9 @@ jobs:
               owner: process.env.REPO_OWNER,
               repo: process.env.REPO_NAME,
               issue_number: num,
-              body: 'Finished',
+              body: `Pushed as:
+                     * \`quay.io/mk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}\`
+                     * \`hyperk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}\``,
           })
           await github.rest.issues.removeLabel({
               owner: process.env.REPO_OWNER,
