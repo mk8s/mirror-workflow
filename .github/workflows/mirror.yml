@@ -39,7 +39,7 @@ jobs:
 
               let num = event.issue.number
 
-              if (labels.indexOf("work-in-progress") == -1)) {
+              if (labels.indexOf("work-in-progress") == -1) {
                   let src = event.issue.title
                   let dst = src.match('[^/]+:.+$')[0]
                   await github.rest.issues.addLabels({
