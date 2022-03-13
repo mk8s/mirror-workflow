@@ -107,7 +107,7 @@ jobs:
               issue_number: num,
               body: `Pushed as:
                      * \`quay.io/mk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}\`
-                     * \`hyperk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}\``,
+                     * \`hyperk8s/${{ steps.checkIssue.outputs.MIRROR_DST }}\``.replace(/^\s+/mg, ''),
           })
           await github.rest.issues.removeLabel({
               owner: process.env.REPO_OWNER,
