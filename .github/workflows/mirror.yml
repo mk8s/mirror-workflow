@@ -84,7 +84,7 @@ jobs:
 
           let num = event.issue.number
 
-          await github.rest.issues.addLabels({
+          await github.rest.issues.removeLabel({
               owner: process.env.REPO_OWNER,
               repo: process.env.REPO_NAME,
               issue_number: num,
