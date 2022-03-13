@@ -100,7 +100,7 @@ jobs:
               issue_number: num,
               name: "work-in-progress",
           })
-          await github.rest.issues.close({
+          await github.rest.issues.update({
               owner: process.env.REPO_OWNER,
               repo: process.env.REPO_NAME,
               issue_number: num,
