@@ -46,7 +46,7 @@ jobs:
                       owner: process.env.REPO_OWNER,
                       repo: process.env.REPO_NAME,
                       issue_number: num,
-                      "labels[].name": [ "work-in-progress" ],
+                      labels: [ "work-in-progress" ],
                   })
                   core.setOutput('MIRROR_SRC', src)
                   core.setOutput('MIRROR_DST', dst)
@@ -77,7 +77,7 @@ jobs:
     - name: close issue
       uses: actions/github-script@v6.0.0
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        repo-token: github-token
         script: |
           const fs = require('fs')
           const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"))
