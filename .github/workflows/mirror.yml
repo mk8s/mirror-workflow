@@ -18,7 +18,7 @@ jobs:
     steps:
     - name: check issue
       id: checkIssue
-      uses: actions/github-script@v6.0.0
+      uses: actions/github-script@v6.3.3
       with:
         script: |
           const fs = require('fs')
@@ -93,7 +93,7 @@ jobs:
 
     - name: close issue
       if: steps.checkIssue.outputs.CHECKED
-      uses: actions/github-script@v6.0.0
+      uses: actions/github-script@v6.3.3
       with:
         script: |
           const fs = require('fs')
